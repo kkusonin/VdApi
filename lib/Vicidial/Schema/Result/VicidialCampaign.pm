@@ -2674,5 +2674,46 @@ __PACKAGE__->set_primary_key("campaign_id");
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
+
+sub ingroup_ids {
+    my ( $self ) = @_;
+
+    my @ingroups = split /\s+/, $self->closer_campaigns;
+    pop @ingroups;
+    shift @ingroups;
+
+    if (wantarray) {
+        return @ingroups;
+    } else {
+        return join " ", @ingroups;
+    }
+}
+
+__PACKAGE__->has_many(
+                        'ingroups' => 'Vicidial::Schema::Result::VicidialInboundGroup', 
+                        sub {
+                            my $args = shift;
+                                return (
+                                    {
+                                        "$args->{foreign_alias}.group_id" => { -ident => "$args->{self_alias}.campaign_id" },
+                                    },
+                                    $args->{self_rowobj} && {
+                                        "$args->{foreign_alias}.group_id" => { -in => $args->{self_rowobj }->ingroup_ids }
+                                    }
+                                )
+                        });
+
+__PACKAGE__->has_many(
+                        'quotas',
+                        'Vicidial::Schema::Result::CampaignQuota',
+                        {'foreign.campaign_id' => 'self.campaign_id'},
+                     );
+
+__PACKAGE__->has_many(
+                        'statuses',
+                        'Vicidial::Schema::Result::VicidialCampaignStatus',
+                        {'foreign.campaign_id' => 'self.campaign_id'}
+                     );
+
 __PACKAGE__->meta->make_immutable;
 1;

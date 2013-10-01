@@ -1,0 +1,80 @@
+package Vicidial::Agent;
+use Moose;
+use Vicidial::Schema;
+use namespace::autoclean;
+p
+
+has 'schema' => (
+    is => 'rw',
+    isa => 'Vicidial::Schema',
+    required => 1,
+);
+
+has 'username' => (
+    is => 'rw',
+    isa => 'Str',
+    required => 1,
+);
+
+has 'exten' => (
+    is => 'ro',
+    isa => 'Str',
+    init_arg => undef,
+    lazy => 1,
+    builder => '_init_exten',
+);
+
+has 'user' => (
+    is => 'ro',
+    isa => 'Vicidial::Schema::Result::VicidialUser',
+    init_arg => undef,
+    lazy => 1,
+    builder => '_init_user',
+);
+
+has 'live_agent' => (
+    is => 'ro',
+    isa => 'Vicidial::Schema::Result::VicidialLiveAgent',
+    init_arg => undef,
+    lazy => 1,
+    builder => '_init_live_agent',
+    handles => [qw( extension conf_exten channel)],
+);
+
+has 'phone' => (
+    is => 'ro',
+    isa => 'Vicidial::Schema::Result::Phone',
+    init_arg => undef,
+    lazy => 1,
+    builder => '_init_phone',
+);
+
+sub _init_user {
+    my $self = shift;
+    
+    return $self->schema->resultset('VicidialUser')->find({ user => $self->username });
+}
+
+sub _init_phone {
+    my $self = shift;
+    
+    return ($self->staffed)
+        ? $self->schema->resultset('Phone')->find({ extension => $self->user->live_agent->extension} )
+        : undef;
+}
+
+sub _init_live_agent {
+    my $self = shift;
+
+    return $self->user->live_agent;
+}
+
+sub staffed {
+    my $self = shift;
+
+    return defined $self->user->live_agent;
+}
+
+__PACKAGE__->meta->make_immutable;
+
+1;

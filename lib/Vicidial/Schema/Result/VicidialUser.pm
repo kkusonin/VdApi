@@ -1348,5 +1348,19 @@ __PACKAGE__->add_unique_constraint("user", ["user"]);
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
+
+__PACKAGE__->has_one(
+    'live_agent',
+    'Vicidial::Schema::Result::VicidialLiveAgent',
+    { 'foreign.user' => 'self.user' },
+);
+
+__PACKAGE__->has_one(
+    'live_inbound_agent',
+    'Vicidial::Schema::Result::VicidialLiveInboundAgent',
+    { 'foreign.user' => 'self.user' },
+);
+
 __PACKAGE__->meta->make_immutable;
+
 1;

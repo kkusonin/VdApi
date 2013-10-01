@@ -566,6 +566,26 @@ __PACKAGE__->set_primary_key("live_agent_id");
 # Created by DBIx::Class::Schema::Loader v0.07036 @ 2013-10-01 13:24:19
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:nu6Jv56NGIGEtYlJNJ+rsQ
 
+__PACKAGE__->belongs_to(
+    'user',
+    'Vicidial::Schema::Result::VicidialUser',
+    { 'foreign.user' => 'self.user' }
+);
+
+__PACKAGE__->belongs_to(
+    'campaign',
+    'Vicidial::Schema::Result::VicidialCampaign',
+    sub {
+        my $args = shift;
+
+        return (
+            { "$args->{foreign_alias}.campaign_id" => { -ident => "$args->{self_alias}.campaign_id" } },
+            $args->{self_rowobj} && {
+                "$args->{foreign_alias}.campaign_id" => $args->{self_rowobj}->campaign_id 
+            },
+        );
+    }
+);
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
